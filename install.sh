@@ -52,12 +52,12 @@ systemctl restart mysql
 
 ###########################
 ## Configuración de APACHE
-apt-get install -y apache2 apache2-doc apache2-utils libapache2-mod-php php7.0\
-php7.0-common php7.0-gd php7.0-mysql php7.0-imap php7.0-cli php7.0-cgi libapache2-mod-fcgid\
-apache2-suexec-pristine php-pear php-auth php7.0-mcrypt mcrypt imagemagick libruby\
-libapache2-mod-python php7.0-curl php7.0-intl php7.0-pspell php7.0-recode\
-php7.0-sqlite3 php7.0-tidy php7.0-xmlrpc php7.0-xsl php7.0-opcache php-apcu\
-libapache2-mod-fastcgi php7.0-fpm <<EOF
+apt-get install -y apache2 apache2-doc apache2-utils libapache2-mod-php php7.0 
+   \php7.0-common php7.0-gd php7.0-mysql php7.0-imap php7.0-cli php7.0-cgi libapache2-mod-fcgid 
+   \apache2-suexec-pristine php-pear php-auth php7.0-mcrypt mcrypt imagemagick libruby 
+   \libapache2-mod-python php7.0-curl php7.0-intl php7.0-pspell php7.0-recode 
+   \php7.0-sqlite3 php7.0-tidy php7.0-xmlrpc php7.0-xsl php7.0-opcache php-apcu 
+   \libapache2-mod-fastcgi php7.0-fpm <<EOF
 apache
 yes
 
@@ -79,8 +79,9 @@ apt-get install -y pure-ftpd-common pure-ftpd-mysql openssl
 sed -i 's/=false/=true/' /etc/default/pure-ftpd-common
 echo '1' > /etc/pure-ftpd/conf/TLS
 
-openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/pure-ftpd.pem -out /etc/ssl/private/pure-ftpd.pem\
--subj"/C=ES/ST=Spain/L=Zaragoza/O=LAB/OU=IT depto/CN=lab.lan/emailAddress=soporte@lab.lan"
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/pure-ftpd.pem \
+   -out /etc/ssl/private/pure-ftpd.pem \
+   -subj "/C=ES/ST=Spain/L=Zaragoza/O=LAB/OU=IT depto/CN=lab.lan/emailAddress=soporte@lab.lan"
 
 mod 600 /etc/ssl/private/pure-ftpd.pem
 systemctl restart pure-ftpd-mysql
@@ -89,7 +90,8 @@ systemctl restart pure-ftpd-mysql
 ## Configuración de CORREO
 echo "postfix postfix/mailname string server.lab.lan" | debconf-set-selections
 echo "postfix postfix/main_mailer_type select 'Internet Site'" | debconf-set-selections
-apt-get install -y postfix postfix-mysql postfix-doc getmail4 binutils dovecot-imapd dovecot-pop3d dovecot-mysql dovecot-sieve dovecot-lmtpd sudo
+apt-get install -y postfix postfix-mysql postfix-doc getmail4 binutils 
+   \dovecot-imapd dovecot-pop3d dovecot-mysql dovecot-sieve dovecot-lmtpd sudo
 
 sed -i '17,20s/^#//; 22s/#//; 22s/=.*/=permit_sasl_authenticated,reject/' /etc/postfix/master.cf
 sed -i '28,31s/^#//; 33s/#//; 33s/=.*/=permit_sasl_authenticated,reject/' /etc/postfix/master.cf
@@ -99,9 +101,9 @@ systemctl restart postfix
 
 ###########################
 ## Configuración de MILTER
-apt-get install amavisd-new spamassassin clamav clamav-daemon zoo unzip bzip2 arj nomarch lzop\
-  cabextract apt-listchanges libnet-ldap-perl libauthen-sasl-perl clamav-docs daemon libio-string-perl\
-  libio-socket-ssl-perl libnet-ident-perl zip libnet-dns-perl postgrey -y
+apt-get install -y amavisd-new spamassassin clamav clamav-daemon zoo unzip bzip2 arj nomarch lzop 
+   \cabextract apt-listchanges libnet-ldap-perl libauthen-sasl-perl clamav-docs daemon libio-string-perl 
+   \libio-socket-ssl-perl libnet-ident-perl zip libnet-dns-perl postgrey -y
 
 sed -i 's/Groups false/Groups true/' /etc/clamav/clamd.conf
 
@@ -116,27 +118,9 @@ echo "mailman mailman/site_languages multiselect es" | debconf-set-selections
 echo "mailman mailman/default_server_language select en" | debconf-set-selections
 apt-get -y install mailman
 
-newlist mailman <<EOF
-admin@lab.lan
-P@ssword.
-
-EOF
-
-cat <<EOF >> /etc/aliases
-## lista de distribución mailman
-mailman: "|/var/lib/mailman/mail/mailman post mailman"
-mailman-admin: "|/var/lib/mailman/mail/mailman admin mailman"
-mailman-bounces: "|/var/lib/mailman/mail/mailman bounces mailman"
-mailman-confirm: "|/var/lib/mailman/mail/mailman confirm mailman"
-mailman-join: "|/var/lib/mailman/mail/mailman join mailman"
-mailman-leave: "|/var/lib/mailman/mail/mailman leave mailman"
-mailman-owner: "|/var/lib/mailman/mail/mailman owner mailman"
-mailman-request: "|/var/lib/mailman/mail/mailman request mailman"
-mailman-subscribe: "|/var/lib/mailman/mail/mailman subscribe mailman"
-mailman-unsubscribe: "|/var/lib/mailman/mail/mailman unsubscribe mailman" 
-EOF
-
+newlist -a mailman support@lab.lan P@ssw0rd.
 newaliases
+
 systemctl restart postfix
 ln -s /etc/mailman/apache.conf /etc/apache2/conf-available/mailman.conf
 a2enconf mailman.conf
