@@ -128,12 +128,60 @@ systemctl restart apache2
 systemctl start mailman
 unset DEBIAN_FRONTEND
 
+###########################
+## Configuración de WEBMAIL
+echo "roundcube-core roundcube/mysql/app-pass password P@ssw0rd." | debconf-set-selections
+echo "roundcube-core roundcube/app-password-confirm password P@ssw0rd." | debconf-set-selections
+echo "roundcube-core	roundcube/reconfigure-webserver	multiselect apache2" | debconf-set-selections
+echo "roundcube-core	roundcube/dbconfig-install boolean true" | debconf-set-selections
+
+apt-get install -y roundcube roundcube-core roundcube-mysql roundcube-plugins roundcube-plugins-extra javascript-common libjs-jquery-mousewheel php-net-sieve tinymce wget
+
+sed -i 's/#.*Alias/\t Alias/' /etc/apache2/conf-enabled/roundcube.conf
+sed -i "35s/''/'localhost'/" /etc/roundcube/config.inc.php
+systemctl restart apache2
+
+###########################
+## Configuración de PHPMYADMIN
+
+echo "phpmyadmin	phpmyadmin/mysql/app-pass password P@ssw0rd." | debconf-set-selections
+echo "phpmyadmin	phpmyadmin/app-password-confirm	password P@ssw0rd." | debconf-set-selections
+echo "phpmyadmin	phpmyadmin/dbconfig-install	boolean	true" | debconf-set-selections
+echo "phpmyadmin	phpmyadmin/reconfigure-webserver	multiselect	apache2" | debconf-set-selections
+
+apt-get install -y phpmyadmin
+
+###########################
+## Configuración de ISPConfig
+wget -qO- ispconfig.tar.gz https://git.ispconfig.org/ispconfig/ispconfig3/repository/archive.tar.gz?ref=stable-3.1 | tar -xz -C /opt
+
+php -q /opt/ispconfig3*/install/install.php <<EOF
+en
+standard
+server.lab.lan
+localhost
+3306
+root
+P@ssword
+dbispconfig
+utf8
+ES
+Spain
+Zaragoza
+LAB
+IT depto
+server.lab.lan
+soporte@lab.lan
+8080
+admin
+y
+ES
+Spain
+Zaragoza
+LAB
+IT depto
+server.lab.lan
+soporte@lab.lan
 
 
-
-
-
-
-
-
-
+EOF
