@@ -1,3 +1,3 @@
 # Vagrant e ISPConfig3
 
-Todavía en desarrollo, ver rama '**dev**' para más información.
+En objetivo es crear un 'box' para Vagrant que contenga el software ISPConfig3 listo para usarse.
