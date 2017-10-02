@@ -28,6 +28,9 @@ systemctl stop apparmor && systemctl disable apparmor
 ## Configuración de DNS
 apt-get install -y bind9 dnsutils haveged
 
+systemctl start bind9
+systemctl enable bind9
+
 ###########################
 ## Configuración de LETSCRIPT
 apt-get install -y letsencrypt
@@ -35,7 +38,10 @@ apt-get install -y letsencrypt
 ###########################
 ## Configuración de MARIADB
 apt-get install -y mariadb-client mariadb-server 
+
 systemctl start mysql
+systemctl enable mysql
+
 mysql_secure_installation <<EOF
 
 Y
@@ -52,12 +58,12 @@ systemctl restart mysql
 
 ###########################
 ## Configuración de APACHE
-apt-get install -y apache2 apache2-doc apache2-utils libapache2-mod-php php7.0 
-   \php7.0-common php7.0-gd php7.0-mysql php7.0-imap php7.0-cli php7.0-cgi libapache2-mod-fcgid 
-   \apache2-suexec-pristine php-pear php-auth php7.0-mcrypt mcrypt imagemagick libruby 
-   \libapache2-mod-python php7.0-curl php7.0-intl php7.0-pspell php7.0-recode 
-   \php7.0-sqlite3 php7.0-tidy php7.0-xmlrpc php7.0-xsl php7.0-opcache php-apcu 
-   \libapache2-mod-fastcgi php7.0-fpm <<EOF
+apt-get install -y apache2 apache2-doc apache2-utils libapache2-mod-php php7.0 \
+   php7.0-common php7.0-gd php7.0-mysql php7.0-imap php7.0-cli php7.0-cgi libapache2-mod-fcgid \
+   apache2-suexec-pristine php-pear php-auth php7.0-mcrypt mcrypt imagemagick libruby \
+   libapache2-mod-python php7.0-curl php7.0-intl php7.0-pspell php7.0-recode \
+   php7.0-sqlite3 php7.0-tidy php7.0-xmlrpc php7.0-xsl php7.0-opcache php-apcu \
+   libapache2-mod-fastcgi php7.0-fpm <<EOF
 apache
 yes
 
@@ -72,10 +78,12 @@ EOF
 
 a2enconf httproxy
 systemctl restart apache2
+systemctl enable apache2
 
 ###########################
 ## Configuración de PURE-FTPD
 apt-get install -y pure-ftpd-common pure-ftpd-mysql openssl
+
 sed -i 's/=false/=true/' /etc/default/pure-ftpd-common
 echo '1' > /etc/pure-ftpd/conf/TLS
 
@@ -84,31 +92,40 @@ openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /etc/ssl/private/pur
    -subj "/C=ES/ST=Spain/L=Zaragoza/O=LAB/OU=IT depto/CN=lab.lan/emailAddress=soporte@lab.lan"
 
 mod 600 /etc/ssl/private/pure-ftpd.pem
+
 systemctl restart pure-ftpd-mysql
+systemctl enable pure-ftpd-mysql
 
 ###########################
 ## Configuración de CORREO
 echo "postfix postfix/mailname string server.lab.lan" | debconf-set-selections
 echo "postfix postfix/main_mailer_type select 'Internet Site'" | debconf-set-selections
-apt-get install -y postfix postfix-mysql postfix-doc getmail4 binutils 
-   \dovecot-imapd dovecot-pop3d dovecot-mysql dovecot-sieve dovecot-lmtpd sudo
+apt-get install -y postfix postfix-mysql postfix-doc getmail4 binutils \
+   dovecot-imapd dovecot-pop3d dovecot-mysql dovecot-sieve dovecot-lmtpd sudo
 
 sed -i '17,20s/^#//; 22s/#//; 22s/=.*/=permit_sasl_authenticated,reject/' /etc/postfix/master.cf
 sed -i '28,31s/^#//; 33s/#//; 33s/=.*/=permit_sasl_authenticated,reject/' /etc/postfix/master.cf
 
 systemctl restart postfix
-
+systemctl enable postfix
+systemctl restart dovecot
+systemctl enable dovecot
 
 ###########################
 ## Configuración de MILTER
-apt-get install -y amavisd-new spamassassin clamav clamav-daemon zoo unzip bzip2 arj nomarch lzop 
-   \cabextract apt-listchanges libnet-ldap-perl libauthen-sasl-perl clamav-docs daemon libio-string-perl 
-   \libio-socket-ssl-perl libnet-ident-perl zip libnet-dns-perl postgrey -y
+apt-get install -y amavisd-new spamassassin clamav clamav-daemon zoo unzip bzip2 arj nomarch lzop \
+   cabextract apt-listchanges libnet-ldap-perl libauthen-sasl-perl clamav-docs daemon libio-string-perl \
+   libio-socket-ssl-perl libnet-ident-perl zip libnet-dns-perl postgrey -y
 
 sed -i 's/Groups false/Groups true/' /etc/clamav/clamd.conf
 
 systemctl start clamav-daemon
+systemctl enable clamav-daemon
+systemctl enable clamav-freshclam
 systemctl restart amavid-new
+systemctl enable amavisd-new
+systemctl start postgrey
+systemctl enable postgrey
 systemctl disable spamassassin
 
 ###########################
@@ -124,18 +141,22 @@ newaliases
 systemctl restart postfix
 ln -s /etc/mailman/apache.conf /etc/apache2/conf-available/mailman.conf
 a2enconf mailman.conf
+
 systemctl restart apache2
 systemctl start mailman
+systemctl enable mailman
+
 unset DEBIAN_FRONTEND
 
 ###########################
 ## Configuración de WEBMAIL
 echo "roundcube-core roundcube/mysql/app-pass password P@ssw0rd." | debconf-set-selections
 echo "roundcube-core roundcube/app-password-confirm password P@ssw0rd." | debconf-set-selections
-echo "roundcube-core	roundcube/reconfigure-webserver	multiselect apache2" | debconf-set-selections
+echo "roundcube-core	roundcube/reconfigure-webserver multiselect apache2" | debconf-set-selections
 echo "roundcube-core	roundcube/dbconfig-install boolean true" | debconf-set-selections
 
-apt-get install -y roundcube roundcube-core roundcube-mysql roundcube-plugins roundcube-plugins-extra javascript-common libjs-jquery-mousewheel php-net-sieve tinymce wget
+apt-get install -y roundcube roundcube-core roundcube-mysql roundcube-plugins \
+   roundcube-plugins-extra javascript-common libjs-jquery-mousewheel php-net-sieve tinymce wget
 
 sed -i 's/#.*Alias/\t Alias/' /etc/apache2/conf-enabled/roundcube.conf
 sed -i "35s/''/'localhost'/" /etc/roundcube/config.inc.php
@@ -144,10 +165,10 @@ systemctl restart apache2
 ###########################
 ## Configuración de PHPMYADMIN
 
-echo "phpmyadmin	phpmyadmin/mysql/app-pass password P@ssw0rd." | debconf-set-selections
-echo "phpmyadmin	phpmyadmin/app-password-confirm	password P@ssw0rd." | debconf-set-selections
-echo "phpmyadmin	phpmyadmin/dbconfig-install	boolean	true" | debconf-set-selections
-echo "phpmyadmin	phpmyadmin/reconfigure-webserver	multiselect	apache2" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/mysql/app-pass password P@ssw0rd." | debconf-set-selections
+echo "phpmyadmin phpmyadmin/app-password-confirm password P@ssw0rd." | debconf-set-selections
+echo "phpmyadmin phpmyadmin/dbconfig-install boolean true" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect	apache2" | debconf-set-selections
 
 apt-get install -y phpmyadmin
 
