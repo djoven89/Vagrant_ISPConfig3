@@ -176,33 +176,4 @@ apt-get install -y phpmyadmin
 ## Configuración de ISPConfig
 wget -qO- ispconfig.tar.gz https://git.ispconfig.org/ispconfig/ispconfig3/repository/archive.tar.gz?ref=stable-3.1 | tar -xz -C /opt
 
-php -q /opt/ispconfig3*/install/install.php <<EOF
-en
-standard
-server.lab.lan
-localhost
-3306
-root
-P@ssword
-dbispconfig
-utf8
-ES
-Spain
-Zaragoza
-LAB
-IT depto
-server.lab.lan
-soporte@lab.lan
-8080
-admin
-y
-ES
-Spain
-Zaragoza
-LAB
-IT depto
-server.lab.lan
-soporte@lab.lan
-
-
-EOF
+php -q /opt/ispconfig3*/install/install.php --autoinstall=/vagrant/autoinstall.ini
