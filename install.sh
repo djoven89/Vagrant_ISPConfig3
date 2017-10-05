@@ -152,8 +152,8 @@ unset DEBIAN_FRONTEND
 ## Configuración de WEBMAIL
 echo "roundcube-core roundcube/mysql/app-pass password P@ssw0rd." | debconf-set-selections
 echo "roundcube-core roundcube/app-password-confirm password P@ssw0rd." | debconf-set-selections
-echo "roundcube-core	roundcube/reconfigure-webserver multiselect apache2" | debconf-set-selections
-echo "roundcube-core	roundcube/dbconfig-install boolean true" | debconf-set-selections
+echo "roundcube-core roundcube/reconfigure-webserver multiselect apache2" | debconf-set-selections
+echo "roundcube-core roundcube/dbconfig-install boolean true" | debconf-set-selections
 
 apt-get install -y roundcube roundcube-core roundcube-mysql roundcube-plugins \
    roundcube-plugins-extra javascript-common libjs-jquery-mousewheel php-net-sieve tinymce wget
